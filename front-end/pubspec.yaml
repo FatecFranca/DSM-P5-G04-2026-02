@@ -1,0 +1,20 @@
+name: monitoriza
+description: Monitoriza - Frontend mobile (MVP) do Sistema de Previsão de Evasão no Ensino Superior.
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.0.0 <4.0.0'
+
+# Nenhuma dependência externa: apenas Flutter + Material.
+dependencies:
+  flutter:
+    sdk: flutter
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^3.0.0
+
+flutter:
+  uses-material-design: true
