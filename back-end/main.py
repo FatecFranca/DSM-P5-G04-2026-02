@@ -1,5 +1,5 @@
 
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from pathlib import Path
 from pydantic import BaseModel, Field, ConfigDict
@@ -7,6 +7,14 @@ import pandas as pd
 import joblib
 import math
 
+from routes.alunos import router as alunos_router
+
+from datetime import datetime, timezone
+from sqlalchemy.orm import Session
+
+from database.connection import get_db
+from database.models import Aluno, Previsao
+from utils.montar_dados_previsao import montar_dados_previsao
 
 # Modelo de entrada dos dados do estudante
 class DadosEstudante(BaseModel):
@@ -92,6 +100,8 @@ app = FastAPI(
     version="1.0.0"
 )
 
+app.include_router(alunos_router)
+
 # Configuração de CORS para permitir integração com o Flutter
 app.add_middleware(
     CORSMiddleware,
@@ -136,7 +146,7 @@ def verificar_api():
     Recebe os dados acadêmicos de um estudante e realiza uma previsão
     utilizando o modelo de Regressão Logística.
 
-    A requisição deve conter os 33 campos numéricos esperados
+    A requisição deve conter os 34 campos numéricos esperados
     pelo modelo.
 
     O sistema aplica o pré-processador utilizado durante o treinamento
@@ -154,10 +164,22 @@ def verificar_api():
     }
 )
 
-def prever(dados: DadosEstudante):
 
+
+@app.post(
+    "/prever",
+    summary="Realizar previsão de evasão",
+    description="Busca os dados do estudante no PostgreSQL e realiza a previsão de evasão.",
+    response_model=ResultadoPrevisao
+)
+def prever(
+    aluno_id: int,
+    db: Session = Depends(get_db)
+):
     try:
-        dados_dict = dados.model_dump(by_alias=True)
+        # Monta os dados automaticamente usando o PostgreSQL
+        dados_dict = montar_dados_previsao(aluno_id, db)
+
         # Identifica as colunas esperadas pelo pré-processador
         colunas_esperadas = list(preprocessador.feature_names_in_)
 
@@ -186,18 +208,10 @@ def prever(dados: DadosEstudante):
                 }
             )
 
-        # Verifica se os valores são números válidos
-        for campo, valor in dados_dict.items():
-         if not math.isfinite(valor):
-            raise HTTPException(
-                status_code=422,
-                detail=f"O campo '{campo}' possui um valor inválido."
-        )
-
         # Organiza os dados em um DataFrame
         entrada = pd.DataFrame(
-           [dados_dict],
-           columns=colunas_esperadas
+            [dados_dict],
+            columns=colunas_esperadas
         )
 
         # Verifica valores vazios
@@ -207,13 +221,13 @@ def prever(dados: DadosEstudante):
                 detail="Existem campos com valores vazios."
             )
 
-        # Aplica o mesmo pré-processamento do treinamento
+        # Aplica o pré-processamento
         dados_processados = preprocessador.transform(entrada)
 
         # Realiza a previsão
         previsao = modelo.predict(dados_processados)[0]
 
-        # Obtém as probabilidades de cada classe
+        # Obtém as probabilidades
         probabilidades = modelo.predict_proba(dados_processados)[0]
 
         resultado_probabilidades = {
@@ -224,7 +238,19 @@ def prever(dados: DadosEstudante):
             )
         }
 
-        # Retorna o resultado
+        # Salva a previsão no PostgreSQL
+        nova_previsao = Previsao(
+            aluno_id=aluno_id,
+            resultado=str(previsao),
+            data_previsao=datetime.now(timezone.utc),
+            risco=None,
+            probabilidades=resultado_probabilidades,
+            dados_utilizados=dados_dict
+        )
+
+        db.add(nova_previsao)
+        db.commit()
+
         return {
             "previsao": str(previsao),
             "probabilidades": resultado_probabilidades
@@ -234,6 +260,8 @@ def prever(dados: DadosEstudante):
         raise
 
     except Exception as erro:
+        db.rollback()
+
         raise HTTPException(
             status_code=500,
             detail=f"Erro ao realizar previsão: {str(erro)}"
