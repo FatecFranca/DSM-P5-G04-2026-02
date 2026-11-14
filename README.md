@@ -2,166 +2,297 @@
 
 **Sistema preditivo de evasão no Ensino Superior.**
 
-Aplicativo mobile e API de inteligência artificial que estimam o risco de um estudante abandonar o curso, para que coordenadores e professores possam agir antes que a desistência aconteça.
+O Monitoriza é um projeto desenvolvido para auxiliar instituições de ensino superior no acompanhamento de estudantes. Por meio de um aplicativo mobile, uma API e um modelo de aprendizado de máquina, o sistema analisa informações acadêmicas e socioeconômicas para estimar a probabilidade de evasão.
 
-> Projeto Interdisciplinar (PI) do **5º semestre** do curso de **Tecnologia em Desenvolvimento de Software Multiplataforma** — **Fatec Franca "Dr. Thomaz Novelino"** (Centro Paula Souza).
+A proposta é oferecer informações que possam auxiliar coordenadores e equipes pedagógicas na identificação de estudantes que necessitam de maior acompanhamento.
+
+> Projeto Interdisciplinar (PI) do 5º semestre do curso de **Tecnologia em Desenvolvimento de Software Multiplataforma** da **Fatec Franca – Dr. Thomaz Novelino**, Centro Paula Souza.
 
 ---
 
 ## Sobre o projeto
 
-A evasão escolar costuma ser percebida tarde: o estudante deixa de comparecer ou tranca a matrícula quando o desengajamento já é difícil de reverter. O Monitoriza propõe uma postura **preventiva**. A partir de dados socioeconômicos e do desempenho acadêmico por semestre, um modelo de aprendizado de máquina estima a probabilidade de evasão e classifica o estudante em **risco baixo, médio ou alto**.
+A evasão no ensino superior pode estar relacionada a diversos fatores, como dificuldades financeiras, condições familiares e desempenho acadêmico. Muitas vezes, os sinais de desengajamento são percebidos somente quando o estudante já está próximo de abandonar o curso.
 
-O ecossistema tem três partes integradas:
+O Monitoriza busca contribuir para a identificação antecipada dessas situações por meio da análise de dados e da utilização de técnicas de aprendizado de máquina.
 
-- **Aplicativo mobile (Flutter)**: cadastro do estudante por um formulário em etapas, consulta do risco, resultado detalhado com probabilidades e histórico com busca e filtros por nível de risco.
-- **API RESTful (FastAPI)**: recebe os dados do estudante, executa o modelo e devolve a previsão em JSON; salva e consulta registros no banco de dados.
-- **Modelo de Machine Learning**: Random Forest treinado com a base *Higher Education Predictors of Student Retention*, que classifica o estudante em *Dropout* (evasão), *Enrolled* (cursando) ou *Graduate* (formado).
+O projeto possui três componentes principais:
+
+- **Aplicativo mobile (Flutter):** permite cadastrar estudantes, consultar informações, visualizar resultados das previsões e acessar registros.
+- **API REST (Python e FastAPI):** recebe os dados enviados pelo aplicativo, realiza o processamento das informações, executa o modelo preditivo e acessa o banco de dados.
+- **Modelo de Machine Learning:** utiliza o algoritmo de Regressão Logística para classificar os estudantes em três categorias: `Dropout` (evasão), `Enrolled` (cursando) e `Graduate` (formado).
 
 ## Funcionalidades
 
-- Formulário de cadastro em 5 etapas, com listas de seleção para todas as categorias do dataset.
-- Previsão do risco de evasão com a probabilidade de cada resultado (evasão, cursando, formado).
-- Classificação em risco **baixo**, **médio** e **alto**.
-- Histórico de registros salvo no banco, com busca por nome ou matrícula e filtro por nível de risco.
-- Tela de detalhes com todos os dados informados e o resultado da análise.
-- Modo de demonstração com dados simulados, que funciona sem a API.
+- Cadastro de estudantes por meio de formulário no aplicativo.
+- Registro de informações pessoais, socioeconômicas e acadêmicas.
+- Envio dos dados para a API.
+- Previsão da situação acadêmica utilizando o modelo de aprendizado de máquina.
+- Apresentação das probabilidades de evasão, permanência e conclusão.
+- Classificação do risco de evasão conforme os critérios definidos no sistema.
+- Armazenamento das informações no banco de dados PostgreSQL.
+- Consulta dos estudantes cadastrados e de seus registros.
+
+*Observação: a disponibilidade de cada funcionalidade depende da versão integrada e executável do projeto.*
 
 ## Arquitetura
 
-```
-┌──────────────────┐   HTTP / JSON   ┌────────────────────┐        ┌────────────────┐
-│  App mobile      │ ──────────────► │  API FastAPI       │ ─────► │  Banco de dados │
-│  (Flutter)       │ ◄────────────── │                    │ ◄───── │  SQLite / PostgreSQL │
-└──────────────────┘                 │  ┌──────────────┐  │        └────────────────┘
-                                     │  │ Modelo ML    │  │
-                                     │  │ (joblib)     │  │
-                                     │  └──────────────┘  │
-                                     └────────────────────┘
+O sistema utiliza uma arquitetura em que o aplicativo Flutter se comunica com a API FastAPI por meio de requisições HTTP. A API é responsável por acessar o banco de dados PostgreSQL e executar o modelo de aprendizado de máquina.
+
+```text
+┌────────────────────┐
+│   Aplicativo       │
+│     Flutter        │
+└─────────┬──────────┘
+          │
+          │ HTTP / JSON
+          ▼
+┌────────────────────┐
+│       API          │
+│     FastAPI        │
+│                    │
+│ ┌────────────────┐ │
+│ │ Modelo de      │ │
+│ │ Regressão      │ │
+│ │ Logística      │ │
+│ └────────────────┘ │
+└─────────┬──────────┘
+          │
+          │ SQLAlchemy
+          ▼
+┌────────────────────┐
+│     PostgreSQL     │
+│                    │
+│ Dados dos alunos   │
+│ Dados acadêmicos  │
+│ Dados              │
+│ socioeconômicos    │
+│ Previsões          │
+└────────────────────┘
 ```
 
-O app não executa o modelo: ele envia os dados à API, que carrega o modelo treinado, calcula a previsão e devolve o resultado.
+O aplicativo não executa diretamente o modelo de aprendizado de máquina. Ele envia as informações à API, que realiza o processamento e devolve os resultados ao aplicativo.
 
-## Tecnologias
+## Tecnologias utilizadas
 
 | Camada | Tecnologias |
 |---|---|
-| Mobile | Flutter, Dart, Material 3, pacote `http` |
-| API | Python, FastAPI, Pydantic, SQLAlchemy, Uvicorn |
-| Machine Learning | scikit-learn (Random Forest), pandas, numpy, joblib |
-| Banco de dados | SQLite (desenvolvimento) e PostgreSQL (produção) |
-| Testes | pytest, httpx |
+| Aplicativo mobile | Flutter e Dart |
+| Interface | Material Design |
+| Comunicação mobile | HTTP e JSON |
+| Back-End | Python e FastAPI |
+| Validação de dados | Pydantic |
+| ORM | SQLAlchemy |
+| Banco de dados | PostgreSQL |
+| Machine Learning | scikit-learn |
+| Manipulação de dados | pandas e numpy |
+| Execução da API | Uvicorn |
+| Versionamento | Git e GitHub |
 
-## Como executar
+## Estrutura do projeto
+
+A organização principal do repositório é dividida entre o aplicativo mobile e o Back-End.
+
+```text
+DSM-P5-G04-2026-02/
+│
+├── back-end/
+│   ├── database/
+│   ├── routes/
+│   ├── schemas/
+│   ├── services/
+│   ├── main.py
+│   └── ...
+│
+├── front-end/
+│   ├── lib/
+│   ├── android/
+│   ├── test/
+│   └── ...
+│
+└── README.md
+```
+
+*Observação: a estrutura acima apresenta as pastas principais conhecidas do projeto. Outros arquivos e diretórios podem existir em cada parte.*
+
+## Como executar o projeto
 
 ### Pré-requisitos
 
-- [Python](https://www.python.org/) 3.10 ou superior
-- [Flutter](https://docs.flutter.dev/get-started/install) (versão estável) e um celular Android ou emulador
-- O dataset do Kaggle [*Higher Education Predictors of Student Retention*](https://www.kaggle.com/datasets/thedevastator/higher-education-predictors-of-student-retention), salvo em `backend/datasets/dataset.csv`
+Antes de iniciar, é necessário ter instalado:
 
-### 1. Backend
+- Python 3.12.
+- Flutter SDK.
+- Git.
+- PostgreSQL.
+- Um dispositivo Android ou emulador configurado.
+- Dependências do projeto.
 
-Dentro da pasta `backend/`:
+### 1. Back-End
 
-```bash
-python -m venv .venv
-.venv\Scripts\activate          # Windows
-# source .venv/bin/activate     # Linux / macOS
+Na raiz do repositório, abra o terminal e ative o ambiente virtual utilizado no projeto:
 
-pip install -r requirements.txt
-
-# Treina o modelo e salva em models/model.joblib
-python training/train_baseline.py --csv datasets/dataset.csv
-
-# Inicia a API
-uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+```powershell
+.\.venv312\Scripts\Activate.ps1
 ```
 
-A API fica em `http://localhost:8000`. A documentação interativa (Swagger) está em **`/docs`** e a verificação de saúde em **`/health`**.
+Entre na pasta do Back-End:
 
-Para rodar os testes:
-
-```bash
-pytest
+```powershell
+cd back-end
 ```
+
+Inicie a API:
+
+```powershell
+uvicorn main:app --reload --host 0.0.0.0 --port 8000
+```
+
+Quando a API estiver funcionando, será possível acessá-la pelo navegador do computador:
+
+- API: http://127.0.0.1:8000
+- Documentação interativa (Swagger): http://127.0.0.1:8000/docs
+
+O endereço `0.0.0.0` permite que a API receba conexões de outros dispositivos na rede, conforme a configuração do ambiente.
 
 ### 2. Aplicativo mobile
 
-Dentro da pasta `front-end/`:
+Abra outro terminal e entre na pasta do Front-End:
 
-```bash
+```powershell
+cd front-end
+```
+
+Instale as dependências:
+
+```powershell
 flutter pub get
 ```
 
-**Modo demonstração** (dados simulados, não precisa da API):
+Verifique os dispositivos disponíveis:
 
-```bash
+```powershell
+flutter devices
+```
+
+Execute o aplicativo:
+
+```powershell
 flutter run
 ```
 
-**Conectado à API:**
+### 3. Comunicação com a API
 
-```bash
-# Emulador Android
-flutter run --dart-define=USE_MOCK=false --dart-define=API_URL=http://10.0.2.2:8000
+Para que o aplicativo Android utilize a API executada no computador, é necessário configurar o endereço de acesso corretamente.
 
-# Celular físico via cabo USB
-adb reverse tcp:8000 tcp:8000
-flutter run -d <id-do-celular> --dart-define=USE_MOCK=false --dart-define=API_URL=http://127.0.0.1:8000
+**Emulador Android**
 
-# Celular físico pela rede Wi-Fi (mesma rede do computador)
-flutter run -d <id-do-celular> --dart-define=USE_MOCK=false --dart-define=API_URL=http://<IP-do-computador>:8000
+Utilize o endereço especial `10.0.2.2`, que permite ao emulador acessar o computador hospedeiro:
+
+```text
+http://10.0.2.2:8000
 ```
 
-Use `flutter devices` para listar os dispositivos e seus ids.
+**Celular físico conectado por USB**
 
-### Variáveis de ambiente (backend)
+É possível utilizar o encaminhamento de porta do ADB:
 
-Todas são opcionais em desenvolvimento. Veja `backend/.env.example`.
+```powershell
+adb reverse tcp:8000 tcp:8000
+```
 
-| Variável | Descrição | Padrão |
-|---|---|---|
-| `DATABASE_URL` | Conexão com o banco (ex.: `postgresql://usuario:senha@host:5432/monitoriza`) | SQLite local (`monitoriza.db`) |
-| `MODEL_PATH` | Caminho do modelo treinado | `models/model.joblib` |
-| `RISK_HIGH` | Probabilidade de evasão a partir da qual o risco é **alto** | `0.60` |
-| `RISK_MEDIUM` | Probabilidade de evasão a partir da qual o risco é **médio** | `0.30` |
-| `CORS_ORIGINS` | Origens permitidas, separadas por vírgula | `*` |
+Nesse caso, o aplicativo pode acessar a API pelo endereço:
 
-## Endpoints da API
+```text
+http://127.0.0.1:8000
+```
 
-| Método | Rota | Descrição |
-|---|---|---|
-| `GET` | `/health` | Estado da API e do modelo |
-| `POST` | `/predict` | Calcula a previsão para os dados de um estudante, sem salvar |
-| `POST` | `/records` | Salva o estudante e a previsão gerada |
-| `GET` | `/records` | Lista os registros (parâmetros: `q`, `risk`, `limit`, `offset`) |
-| `GET` | `/records/{id}` | Detalha um registro |
-| `GET` | `/students` | Lista os estudantes cadastrados |
-| `GET` | `/students/{matrícula}/records` | Histórico de previsões de um estudante |
+**Celular conectado pela mesma rede Wi-Fi**
 
-## Sobre o modelo e os dados
+Utilize o endereço IP local do computador, seguido da porta 8000:
 
-O modelo foi treinado com a base pública *Higher Education Predictors of Student Retention* (equivalente ao *Predict Students' Dropout and Academic Success*, do UCI Machine Learning Repository), com 4.424 estudantes e 34 variáveis, coletada no Instituto Politécnico de Portalegre, em Portugal.
+```text
+http://IP-DO-COMPUTADOR:8000
+```
 
-- A variável-alvo tem três classes: `Dropout`, `Enrolled` e `Graduate`.
-- O risco exibido no app é calculado a partir da **probabilidade de evasão** (`Dropout`), usando as faixas definidas em `RISK_HIGH` e `RISK_MEDIUM`.
-- Por ser uma base portuguesa, algumas categorias (formas de ingresso, ocupações) seguem a classificação portuguesa, e as notas usam a escala de 0 a 20. O app exibe os nomes traduzidos e envia à API os códigos do dataset.
-- Os indicadores macroeconômicos (desemprego, inflação e PIB) são preenchidos pela API, não pelo usuário.
+O computador e o celular precisam estar conectados à mesma rede, e o firewall deve permitir a comunicação.
+
+## Banco de dados
+
+O projeto utiliza PostgreSQL para armazenar as informações dos estudantes e os dados necessários para o funcionamento da aplicação.
+
+O Back-End realiza a comunicação com o banco de dados por meio do SQLAlchemy, permitindo cadastrar, consultar e relacionar as informações.
+
+As principais informações armazenadas envolvem:
+
+- Dados de identificação dos estudantes.
+- Informações socioeconômicas.
+- Desempenho acadêmico.
+- Registros relacionados às previsões.
+
+As configurações de conexão devem ser realizadas no ambiente do Back-End, de acordo com os parâmetros definidos no projeto.
+
+**Importante:** as credenciais de acesso ao banco de dados não devem ser compartilhadas publicamente ou enviadas ao repositório.
+
+## Modelo de Machine Learning
+
+O projeto utiliza aprendizado de máquina supervisionado para estimar a situação acadêmica dos estudantes.
+
+Foram avaliados diferentes algoritmos de classificação durante os testes, incluindo:
+
+- Regressão Logística;
+- Análise Discriminante Linear (LDA);
+- K-Nearest Neighbors (KNN);
+- Classification and Regression Trees (CART);
+- Naive Bayes;
+- Support Vector Machine (SVM);
+- Multilayer Perceptron (MLP).
+
+Após a comparação dos resultados, a **Regressão Logística** foi escolhida para ser utilizada como modelo principal do projeto.
+
+A variável-alvo possui três classes:
+
+| Classe | Significado |
+|---|---|
+| `Dropout` | Evasão |
+| `Enrolled` | Estudante matriculado |
+| `Graduate` | Estudante formado |
+
+O sistema utiliza as probabilidades calculadas pelo modelo para apresentar o resultado da previsão.
+
+A classificação do risco de evasão considera a probabilidade associada à classe `Dropout`, conforme os critérios definidos na implementação.
+
+### Base de dados
+
+O modelo foi desenvolvido utilizando a base pública **Higher Education Predictors of Student Retention**, disponibilizada no Kaggle.
+
+A base está relacionada ao estudo *Predicting Students' Dropout and Academic Success*, desenvolvido com dados de estudantes do Instituto Politécnico de Portalegre, em Portugal.
+
+A utilização dessa base permite analisar informações acadêmicas, socioeconômicas e demográficas relacionadas à trajetória dos estudantes.
+
+É importante considerar que os dados utilizados no treinamento são provenientes de uma instituição portuguesa, enquanto o aplicativo foi pensado para o contexto brasileiro. Essa diferença representa uma limitação que deve ser considerada na interpretação dos resultados e na aplicação do modelo.
 
 ## Equipe
 
 | Integrante | Atuação |
 |---|---|
-| **Ana Júlia Ferreira Rodrigues** | Aplicativo mobile (Flutter) e integração com a API |
-| **Guilherme Laurindo de Souza Silva** | Modelo de Machine Learning, API e infraestrutura em nuvem |
+| Ana Júlia Ferreira Rodrigues | Desenvolvimento do aplicativo mobile (Flutter) e integração com a API |
+| Guilherme Laurindo de Souza Silva | Desenvolvimento do Back-End, integração com o banco de dados e modelo de Machine Learning |
 
 ## Contexto acadêmico
 
-Projeto desenvolvido como Projeto Interdisciplinar do 5º semestre do curso de Tecnologia em Desenvolvimento de Software Multiplataforma da Fatec Franca "Dr. Thomaz Novelino", Centro Paula Souza, em 2026.
+Projeto desenvolvido como Projeto Interdisciplinar do 5º semestre do curso de Tecnologia em Desenvolvimento de Software Multiplataforma da Faculdade de Tecnologia de Franca – Dr. Thomaz Novelino, pertencente ao Centro Paula Souza, no ano de 2026.
 
 ## Referências
 
-- Realinho, V.; Machado, J.; Baptista, L.; Martins, M. V. *Predicting Student Dropout and Academic Success*. Data, 7(11), 146, 2022. https://mdpi.com/2306-5729/7/11/146
-- Kaggle: *Higher Education Predictors of Student Retention*.
-- Documentação do [Flutter](https://docs.flutter.dev/), do [FastAPI](https://fastapi.tiangolo.com/), do [scikit-learn](https://scikit-learn.org/) e do [PostgreSQL](https://www.postgresql.org/docs/).
+REALINHO, V.; MACHADO, J.; BAPTISTA, L.; MARTINS, M. V. *Predicting Student Dropout and Academic Success*. Data, v. 7, n. 11, art. 146, 2022. Disponível em: https://doi.org/10.3390/data7110146.
+
+KAGGLE. *Higher Education Predictors of Student Retention*. Disponível em: https://www.kaggle.com/datasets/thedevastator/higher-education-predictors-of-student-retention.
+
+FASTAPI. *FastAPI Documentation*. Disponível em: https://fastapi.tiangolo.com/.
+
+FLUTTER. *Flutter Documentation*. Disponível em: https://docs.flutter.dev/.
+
+POSTGRESQL. *PostgreSQL Documentation*. Disponível em: https://www.postgresql.org/docs/.
+
+SCIKIT-LEARN. *Scikit-learn Documentation*. Disponível em: https://scikit-learn.org/.
