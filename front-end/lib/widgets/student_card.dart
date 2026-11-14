@@ -1,3 +1,4 @@
+
 import 'package:flutter/material.dart';
 import '../models/history_record.dart';
 import '../theme/app_theme.dart';
@@ -7,7 +8,7 @@ import 'risk_badge.dart';
 class StudentCard extends StatelessWidget {
   final HistoryRecord record;
   final VoidCallback onTap;
-  final bool compact; // true na Home (sem linha de curso)
+  final bool compact;
 
   const StudentCard({
     super.key,
@@ -19,6 +20,7 @@ class StudentCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final s = record.student;
+
     return Padding(
       padding: const EdgeInsets.only(bottom: 10),
       child: Material(
@@ -52,21 +54,30 @@ class StudentCard extends StatelessWidget {
                         Text(
                           s.summaryLine,
                           style: const TextStyle(
-                              color: AppColors.textSecondary, fontSize: 12.5),
+                            color: AppColors.textSecondary,
+                            fontSize: 12.5,
+                          ),
                         ),
                       ],
                       const SizedBox(height: 4),
                       Text(
                         formatDate(record.date),
                         style: const TextStyle(
-                            color: AppColors.textSecondary, fontSize: 12.5),
+                          color: AppColors.textSecondary,
+                          fontSize: 12.5,
+                        ),
                       ),
                     ],
                   ),
                 ),
-                RiskBadge(risk: record.result.risk),
+                RiskBadge(
+                  prediction: record.result.prediction,
+                ),
                 const SizedBox(width: 4),
-                const Icon(Icons.chevron_right, color: AppColors.textSecondary),
+                const Icon(
+                  Icons.chevron_right,
+                  color: AppColors.textSecondary,
+                ),
               ],
             ),
           ),

@@ -1,10 +1,14 @@
+
 import 'package:flutter/material.dart';
+
 import 'screens/form_screen.dart';
 import 'screens/history_screen.dart';
 import 'screens/home_screen.dart';
-import 'services/mock_prediction_service.dart';
+
 import 'services/mock_student_repository.dart';
+import 'services/prediction_api_service.dart';
 import 'services/prediction_service.dart';
+
 import 'theme/app_theme.dart';
 
 void main() => runApp(const MonitorizaApp());
@@ -34,8 +38,10 @@ class MainShell extends StatefulWidget {
 class _MainShellState extends State<MainShell> {
   int _index = 0;
 
-  // Para usar a API no futuro, troque apenas esta linha por PredictionApiService().
-  final PredictionService _predictionService = MockPredictionService();
+  // Serviço real conectado à API FastAPI.
+  final PredictionService _predictionService = PredictionApiService();
+
+  // Histórico local do aplicativo.
   final MockStudentRepository _repository = MockStudentRepository()..load();
 
   void _go(int i) => setState(() => _index = i);

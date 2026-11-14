@@ -1,29 +1,49 @@
+
 import '../models/form_options.dart';
 import '../models/prediction_result.dart';
 import '../models/student.dart';
 import 'prediction_service.dart';
 
-/// Simula a API de ML: espera 1,5 s e devolve o mesmo JSON que a API real devolverá.
+/// Serviço fictício para testar a interface.
+/// Não utiliza o modelo real de Machine Learning.
 class MockPredictionService implements PredictionService {
   @override
   Future<PredictionResult> predict(Student student) async {
     await Future.delayed(const Duration(milliseconds: 1500));
 
-    // Heurística apenas para o mock variar conforme os dados informados.
-    var p = 0.45;
-    p += (7.0 - student.averageGrade) * 0.12;
-    p += (75 - student.attendance) * 0.008;
-    if (student.failedBefore) p += 0.15;
-    if (student.works) p += 0.05;
-    if (student.hasScholarship) p -= 0.08;
-    if (FormOptions.incomes.indexOf(student.familyIncome) <= 1) p += 0.04;
-    p = p.clamp(0.03, 0.97);
+    var dropout = 0.45;
 
-    // Mesmo formato do contrato futuro: {"prediction": "...", "probability": 0.78}
-    final json = {
-      'prediction': p >= 0.5 ? 'em_risco' : 'sem_risco',
-      'probability': double.parse(p.toStringAsFixed(2)),
+    dropout += (7.0 - student.averageGrade) * 0.12;
+    dropout += (75 - student.attendance) * 0.008;
+
+    if (student.failedBefore) dropout += 0.15;
+    if (student.works) dropout += 0.05;
+    if (student.hasScholarship) dropout -= 0.08;
+
+    if (FormOptions.incomes.indexOf(student.familyIncome) <= 1) {
+      dropout += 0.04;
+    }
+
+    dropout = dropout.clamp(0.03, 0.97);
+
+    final remaining = 1.0 - dropout;
+
+    final enrolled = remaining * 0.45;
+    final graduate = remaining * 0.55;
+
+    final probabilities = {
+      'Dropout': dropout,
+      'Enrolled': enrolled,
+      'Graduate': graduate,
     };
-    return PredictionResult.fromJson(json);
+
+    final prediction = probabilities.entries.reduce(
+      (a, b) => a.value >= b.value ? a : b,
+    ).key;
+
+    return PredictionResult.fromJson({
+      'previsao': prediction,
+      'probabilidades': probabilities,
+    });
   }
 }

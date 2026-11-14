@@ -1,21 +1,52 @@
-enum RiskLevel { emRisco, semRisco }
 
-/// Resultado devolvido pelo modelo.
-/// Formato esperado da API: {"prediction": "em_risco", "probability": 0.78}
+enum PredictionClass {
+  dropout,
+  enrolled,
+  graduate,
+}
+
 class PredictionResult {
-  final RiskLevel risk;
-  final double probability; // 0.0 a 1.0
+  final PredictionClass prediction;
+  final Map<String, double> probabilities;
 
-  const PredictionResult({required this.risk, required this.probability});
+  const PredictionResult({
+    required this.prediction,
+    required this.probabilities,
+  });
 
-  int get percent => (probability * 100).round();
+  double get dropoutProbability => probabilities['Dropout'] ?? 0.0;
+
+  double get enrolledProbability => probabilities['Enrolled'] ?? 0.0;
+
+  double get graduateProbability => probabilities['Graduate'] ?? 0.0;
 
   factory PredictionResult.fromJson(Map<String, dynamic> json) {
+    final resultado = json['previsao'] as String;
+
+    final PredictionClass classificacao;
+
+    switch (resultado) {
+      case 'Dropout':
+        classificacao = PredictionClass.dropout;
+        break;
+      case 'Enrolled':
+        classificacao = PredictionClass.enrolled;
+        break;
+      case 'Graduate':
+        classificacao = PredictionClass.graduate;
+        break;
+      default:
+        throw FormatException('Classificação desconhecida: $resultado');
+    }
+
+    final probabilidadesJson =
+        json['probabilidades'] as Map<String, dynamic>;
+
     return PredictionResult(
-      risk: json['prediction'] == 'em_risco'
-          ? RiskLevel.emRisco
-          : RiskLevel.semRisco,
-      probability: (json['probability'] as num).toDouble(),
+      prediction: classificacao,
+      probabilities: probabilidadesJson.map(
+        (key, value) => MapEntry(key, (value as num).toDouble()),
+      ),
     );
   }
 }

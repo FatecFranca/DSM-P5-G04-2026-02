@@ -263,31 +263,3 @@ def consultar_previsoes(
     )
 
     return previsoes
-
-# Consultar histórico de previsões do estudante
-@router.get(
-    "/{aluno_id}/previsoes",
-    response_model=list[PrevisaoResponse]
-)
-def consultar_previsoes(
-    aluno_id: int,
-    db: Session = Depends(get_db)
-):
-    # Verifica se o estudante existe
-    aluno = db.query(Aluno).filter(Aluno.id == aluno_id).first()
-
-    if aluno is None:
-        raise HTTPException(
-            status_code=404,
-            detail="Estudante não encontrado."
-        )
-
-    # Busca as previsões do estudante
-    previsoes = (
-        db.query(Previsao)
-        .filter(Previsao.aluno_id == aluno_id)
-        .order_by(Previsao.data_previsao.desc())
-        .all()
-    )
-
-    return previsoes

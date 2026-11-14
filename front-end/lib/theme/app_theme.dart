@@ -1,3 +1,4 @@
+
 import 'package:flutter/material.dart';
 import '../models/prediction_result.dart';
 
@@ -31,7 +32,9 @@ class AppTheme {
       primary: AppColors.primary,
       surface: AppColors.surface,
     );
-    OutlineInputBorder border(Color c, [double w = 1]) => OutlineInputBorder(
+
+    OutlineInputBorder border(Color c, [double w = 1]) =>
+        OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
           borderSide: BorderSide(color: c, width: w),
         );
@@ -74,28 +77,80 @@ class AppTheme {
           disabledForegroundColor: Colors.white,
           minimumSize: const Size.fromHeight(54),
           elevation: 0,
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-          textStyle:
-              const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(14),
+          ),
+          textStyle: const TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.w600,
+          ),
         ),
       ),
       snackBarTheme: SnackBarThemeData(
         behavior: SnackBarBehavior.floating,
         backgroundColor: AppColors.textPrimary,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+        ),
       ),
     );
   }
 }
 
-/// Cores/textos associados a cada nível de risco.
-extension RiskLevelStyle on RiskLevel {
-  bool get isRisk => this == RiskLevel.emRisco;
-  String get label => isRisk ? 'Em risco' : 'Sem risco';
-  String get headline => isRisk ? 'Em risco de evasão' : 'Baixo risco de evasão';
-  Color get color => isRisk ? AppColors.danger : AppColors.success;
-  Color get background => isRisk ? AppColors.dangerBg : AppColors.successBg;
-  IconData get icon =>
-      isRisk ? Icons.priority_high_rounded : Icons.check_rounded;
+/// Cores e textos associados à classificação da previsão.
+extension PredictionClassStyle on PredictionClass {
+  String get label {
+    switch (this) {
+      case PredictionClass.dropout:
+        return 'Dropout';
+      case PredictionClass.enrolled:
+        return 'Enrolled';
+      case PredictionClass.graduate:
+        return 'Graduate';
+    }
+  }
+
+  String get headline {
+    switch (this) {
+      case PredictionClass.dropout:
+        return 'Classificado como evasão';
+      case PredictionClass.enrolled:
+        return 'Classificado como matriculado';
+      case PredictionClass.graduate:
+        return 'Classificado como formado';
+    }
+  }
+
+  Color get color {
+    switch (this) {
+      case PredictionClass.dropout:
+        return AppColors.danger;
+      case PredictionClass.enrolled:
+        return AppColors.primary;
+      case PredictionClass.graduate:
+        return AppColors.success;
+    }
+  }
+
+  Color get background {
+    switch (this) {
+      case PredictionClass.dropout:
+        return AppColors.dangerBg;
+      case PredictionClass.enrolled:
+        return const Color(0xFFE5E7FF);
+      case PredictionClass.graduate:
+        return AppColors.successBg;
+    }
+  }
+
+  IconData get icon {
+    switch (this) {
+      case PredictionClass.dropout:
+        return Icons.warning_rounded;
+      case PredictionClass.enrolled:
+        return Icons.school_rounded;
+      case PredictionClass.graduate:
+        return Icons.check_circle_rounded;
+    }
+  }
 }

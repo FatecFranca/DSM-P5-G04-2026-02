@@ -90,7 +90,7 @@ class AppDropdown extends StatelessWidget {
       children: [
         _FieldLabel(label),
         DropdownButtonFormField<String>(
-          value: value,
+          initialValue: value,
           isExpanded: true,
           borderRadius: BorderRadius.circular(12),
           icon: const Icon(Icons.keyboard_arrow_down_rounded),
