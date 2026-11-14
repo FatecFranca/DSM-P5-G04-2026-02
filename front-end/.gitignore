@@ -55,3 +55,19 @@ venv/
 # Cache Python
 __pycache__/
 *.pyc
+
+# Credenciais e variáveis de ambiente
+.env
+.env.*
+!.env.example
+
+# Ambientes virtuais Python
+.venv/
+.venv312/
+
+# Arquivos temporários Python
+__pycache__/
+*.py[cod]
+
+# Credenciais
+.env
